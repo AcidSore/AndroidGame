@@ -10,24 +10,29 @@ import ru.acidsore.stargame.base.BaseScreen;
 
 
 public class MenuScreen extends BaseScreen {
-    SpriteBatch batch;
+
+    private static final float V_LEN = 0.00001f;
+
     Texture img;
     Texture background;
 
     Vector2 pos;
-    Vector2 touch;
-    Vector2 tmp;
-    Vector2 tmp2;
+    Vector2 speed;
+    Vector2 userTouch;
+    Vector2 buf;
+
 
     @Override
     public void show() {
         super.show();
-        batch = new SpriteBatch();
         background = new Texture("maxresdefault.jpg");
         img = new Texture("badlogic.jpg");
         pos = new Vector2(0, 0);
-        touch = new Vector2();
-        tmp = new Vector2();
+        pos = new Vector2(-0.5f, -0.5f);
+        speed = new Vector2(0.002f, 0.002f);
+        userTouch = new Vector2();
+        buf = new Vector2();
+
 
     }
 
@@ -36,31 +41,26 @@ public class MenuScreen extends BaseScreen {
         super.render(delta);
         Gdx.gl.glClearColor(0.5f, 0.2f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        buf.set(userTouch);
+         //if (Gdx.input.isTouched()) {
+                if ((buf.sub(pos).len() > V_LEN)) {
+                  pos.add(speed);
+                 } else
+                pos.set(userTouch);
+         //}
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) pos.x -= .1f * Gdx.graphics.getDeltaTime();
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) pos.x += .1f* Gdx.graphics.getDeltaTime();
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) pos.y += .1f * Gdx.graphics.getDeltaTime();
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) pos.y -= .1f * Gdx.graphics.getDeltaTime();
+        if (pos.x < -.5f) pos.x = -0.5f;
+        if (pos.y < -.5f) pos.y = -0.5f;
+        if (pos.x > .5f) pos.x = 0.f;
+        if (pos.y > .5f) pos.y = 0.f;
         batch.begin();
-        batch.draw(background, -150, -200);
-        batch.draw(img, pos.x, pos.y);
+        batch.draw(background, -0.5f, -0.5f, 1f, 1f);
+        batch.draw(img, pos.x, pos.y, 0.5f, 0.5f);
         batch.end();
-            if (Gdx.input.isTouched()) {
-                if(touch.x != Gdx.input.getX() && touch.y != Gdx.input.getY()) {
-                    touch.set(Gdx.input.getX(), Gdx.input.getY());
 
-                    while (pos.x != touch.x && pos.y != touch.y) {
-                        tmp2 = new Vector2(touch);
-                        tmp = (tmp2.sub(pos)).scl(.1f);
-                        pos.add(tmp);
-                    }
-                    //                System.out.println("touch " + " " + touch.x + " " + touch.y);
-                    //                System.out.println("pos " + " " + pos.x + " " + pos.y);
-                }
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) pos.x -= 100 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) pos.x += 100 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyPressed(Input.Keys.UP)) pos.y += 100 * Gdx.graphics.getDeltaTime();
-            if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) pos.y -= 100 * Gdx.graphics.getDeltaTime();
-            if (pos.x < 0) pos.x = 0;
-            if (pos.y < 0) pos.y = 0;
-            if (pos.x > Gdx.graphics.getWidth() - 256) pos.x = Gdx.graphics.getWidth() - 256;
-            if (pos.y > Gdx.graphics.getHeight() - 256) pos.y = Gdx.graphics.getHeight() - 256;
     }
     @Override
     public boolean keyDown(int keycode) {
@@ -75,14 +75,14 @@ public class MenuScreen extends BaseScreen {
 
     @Override
     public void dispose() {
-        batch.dispose();
         img.dispose();
         super.dispose();
     }
 
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-    //    System.out.println("touchDown " + screenX + " " + (Gdx.graphics.getHeight() - screenY));
-        return super.touchDown(screenX, screenY, pointer, button);
+    public boolean touchDown(Vector2 touch, int pointer) {
+       userTouch.set(touch);
+       speed.set(userTouch.cpy().sub(pos.setLength(V_LEN)));
+        return super.touchDown(touch, pointer);
     }
 }
