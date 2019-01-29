@@ -93,17 +93,17 @@ public class MainShip extends Sprite {
     }
 
     private void moveRight() {
-        while (pos.x < worldBounds.getRight() - 0.07f){
+       // while (pos.x < worldBounds.getRight() - 0.07f){
             v.set(v0);
-            if (pos.x  == worldBounds.getRight() - 0.07f) break;
-        }
+        //    if (pos.x  == worldBounds.getRight() - 0.07f) break;
+       // }
     }
 
     private void moveLeft() {
-        while (pos.x > worldBounds.getLeft() + 0.07f) {
+      //  while (pos.x > worldBounds.getLeft() + 0.07f) {
             v.set(v0).rotate(180);
-            if (pos.x == worldBounds.getLeft() + 0.07f) break;
-        }
+       //     if (pos.x == worldBounds.getLeft() + 0.07f) break;
+      //  }
     }
 
     private void stop() {
