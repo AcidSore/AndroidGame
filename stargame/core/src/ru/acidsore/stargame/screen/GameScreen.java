@@ -1,38 +1,28 @@
 package ru.acidsore.stargame.screen;
-import com.badlogic.gdx.Gdx;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-
-import com.badlogic.gdx.math.Vector2;
-
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 
-
-import ru.acidsore.stargame.SimpleStarGame;
-import ru.acidsore.stargame.StarGame;
 import ru.acidsore.stargame.base.BaseScreen;
 import ru.acidsore.stargame.math.Rect;
-import ru.acidsore.stargame.sprite.menu.Background;
 import ru.acidsore.stargame.sprite.Star;
+import ru.acidsore.stargame.sprite.menu.Background;
 import ru.acidsore.stargame.sprite.menu.ExitButton;
 import ru.acidsore.stargame.sprite.menu.PlayButton;
 
-
-public class MenuScreen extends BaseScreen {
-
+public class GameScreen extends BaseScreen {
     private TextureAtlas atlas;
     private Texture bg;
     private Background background;
     private Star star[];
     private PlayButton play;
     private ExitButton exit;
-    public static StarGame game;
 
-    public MenuScreen(SimpleStarGame game){
-        this.game = game;
-    }
+
 
     @Override
     public void show() {
@@ -44,8 +34,6 @@ public class MenuScreen extends BaseScreen {
         for (int i = 0; i < star.length; i++) {
             star[i] = new Star(atlas);
         }
-        play = new PlayButton(atlas);
-        exit = new ExitButton(atlas);
     }
 
     @Override
@@ -91,5 +79,4 @@ public class MenuScreen extends BaseScreen {
     public boolean touchDown(Vector2 touch, int pointer) {
         return super.touchDown(touch, pointer);
     }
-
 }
