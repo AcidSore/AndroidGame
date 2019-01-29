@@ -57,6 +57,9 @@ public class BaseScreen implements Screen, InputProcessor {
 
 
     }
+    public void resize(Rect worldBounds) {
+
+    }
 
     @Override
     public void pause() {
