@@ -9,42 +9,51 @@ import com.badlogic.gdx.math.Vector2;
 
 import ru.acidsore.math.Rect;
 import ru.acidsore.pool.BulletPool;
+import ru.acidsore.pool.ExplosionPool;
 
 
 public class Enemy extends Ship {
 
+    private enum State {DESCENT, FIGHT}
+
     private Vector2 v0 = new Vector2();
+    private State state;
+    private Vector2 descentV = new Vector2(0, -0.15f);
+    private MainShip mainShip;
 
-    private Rect worldBounds;
-    private Vector2 v = new Vector2();
-    private int damage;
-    private Object owner;
-
-
-    public Enemy(Sound shootSound, BulletPool bulletPool, Rect worldBounds) {
+    public Enemy(Sound shootSound, BulletPool bulletPool, ExplosionPool explosionPool, Rect worldBounds, MainShip mainShip) {
         super();
+        this.worldBounds = worldBounds;
         this.shootSound = shootSound;
         this.bulletPool = bulletPool;
+        this.explosionPool = explosionPool;
+        this.mainShip = mainShip;
         this.v.set(v0);
         this.bulletV = new Vector2();
-        this.shootSound= Gdx.audio.newSound(Gdx.files.internal("music/bullet.wav"));
-        this.reloadInterval = 0.3f;
-        this.worldBounds = worldBounds;
-        this.owner = owner;
     }
 
     @Override
     public void update(float delta) {
         super.update(delta);
         this.pos.mulAdd(v, delta);
-        reloadTimer += delta;
-           if (reloadTimer >= reloadInterval)
-           {
-               reloadTimer = 0f;
-               shoot();
-           }
-        if (getBottom()< worldBounds.getBottom()) {
-            destroy();
+        switch (state) {
+            case DESCENT:
+                if (getTop() <= worldBounds.getTop()) {
+                    v.set(v0);
+                    state = State.FIGHT;
+                }
+                break;
+            case FIGHT:
+                reloadTimer += delta;
+                if (reloadTimer >= reloadInterval) {
+                    reloadTimer = 0f;
+                    shoot();
+                }
+                if (getBottom() < worldBounds.getBottom()) {
+                    mainShip.damage(this.damage);
+                    destroy();
+                }
+                break;
         }
     }
 
@@ -70,12 +79,21 @@ public class Enemy extends Ship {
         setHeightProportion(height);
         this.hp = hp;
         reloadTimer = reloadInterval;
-        v.set(v0);
+        v.set(descentV);
+        state = State.DESCENT;
     }
-    public void shoot() {
-        Bullet bulletEnemy = bulletPool.obtain();
-        bulletEnemy.set(this, bulletRegion, pos, new Vector2(0, -0.5f), 0.01f, worldBounds, 1);
-        shootSound.play();
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        boom();
+    }
+
+    public boolean isBulletCollision(Rect bullet) {
+        return !(bullet.getRight() < getLeft()
+                || bullet.getLeft() > getRight()
+                || bullet.getBottom() > getTop()
+                || bullet.getTop() < pos.y
+        );
     }
 }
-

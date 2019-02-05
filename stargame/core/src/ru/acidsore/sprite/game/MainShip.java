@@ -1,5 +1,6 @@
 package ru.acidsore.sprite.game;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
@@ -10,6 +11,9 @@ import com.badlogic.gdx.math.Vector2;
 import ru.acidsore.base.Sprite;
 import ru.acidsore.math.Rect;
 import ru.acidsore.pool.BulletPool;
+import ru.acidsore.pool.ExplosionPool;
+import ru.acidsore.screen.GameOverScreen;
+import ru.acidsore.screen.GameScreen;
 
 public class MainShip extends Ship {
 
@@ -23,6 +27,8 @@ public class MainShip extends Ship {
     private boolean isPressedLeft;
     private boolean isPressedRight;
 
+    private float damageInterval = 0.1f;
+    private float damageTimer = damageInterval;
 
     private BulletPool bulletPool;
 
@@ -32,19 +38,25 @@ public class MainShip extends Ship {
     private int leftPointer = INVALID_POINTER;
     private int rightPointer = INVALID_POINTER;
 
+    private Game game;
 
 
-    public MainShip(TextureAtlas atlas, BulletPool bulletPool) {
+
+    public MainShip(TextureAtlas atlas, BulletPool bulletPool, ExplosionPool explosionPool) {
         super(atlas.findRegion("main_ship"), 1, 2, 2);
         this.bulletRegion = atlas.findRegion("bulletMainShip");
         this.bulletPool = bulletPool;
+        this.explosionPool = explosionPool;
+        this.reloadInterval = 0.2f;
         setHeightProportion(0.15f);
         this.bulletV = new Vector2(0, 0.5f);
         this.bulletHeight = 0.01f;
         this.damage = 1;
-        this.hp = 100;
+        this.hp = 1;
         this.shootSound = Gdx.audio.newSound(Gdx.files.internal("music/shot.mp3"));
     }
+
+
 
     @Override
     public void resize(Rect worldBounds) {
@@ -143,6 +155,31 @@ public class MainShip extends Ship {
             }
         }
         return super.touchUp(touch, pointer);
+    }
+     @Override
+    public void damage(int damage) {
+        frame = 1;
+        damageTimer = 0f;
+        hp -= damage;
+        if (hp <= 0) {
+            destroy();
+             bulletPool = null;
+            game.setScreen(new GameScreen());
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        boom();
+    }
+
+    public boolean isBulletCollision(Rect bullet) {
+        return !(bullet.getRight() < getLeft()
+                || bullet.getLeft() > getRight()
+                || bullet.getBottom() > pos.y
+                || bullet.getTop() < getBottom()
+        );
     }
 
     private void moveRight() {

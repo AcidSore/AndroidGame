@@ -7,10 +7,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.WindowedMean;
+
+import java.util.List;
 
 import ru.acidsore.sprite.Background;
 import ru.acidsore.sprite.Star;
+import ru.acidsore.sprite.game.Bullet;
+import ru.acidsore.sprite.game.Enemy;
 import ru.acidsore.sprite.game.MainShip;
 import ru.acidsore.base.Base2DScreen;
 import ru.acidsore.math.Rect;
@@ -18,9 +21,7 @@ import ru.acidsore.pool.BulletPool;
 import ru.acidsore.pool.ExplosionPool;
 import ru.acidsore.sprite.game.Explosion;
 import ru.acidsore.pool.EnemyPool;
-import ru.acidsore.utils.EnemyEmitterSmall;
-import ru.acidsore.utils.EnemyEmitterMedium;
-import ru.acidsore.utils.EnemyEmitterBig;
+import ru.acidsore.utils.EnemyEmitter;
 
 public class GameScreen extends Base2DScreen {
 
@@ -33,11 +34,7 @@ public class GameScreen extends Base2DScreen {
     private BulletPool bulletPool;
     private ExplosionPool explosionPool;
     private EnemyPool enemyPool;
-
-    private EnemyEmitterSmall enemyEmitterSmall;
-    private EnemyEmitterMedium enemyEmitterMedium;
-    private EnemyEmitterBig enemyEmitterBig;
-    private Rect WorldBounds;
+    private EnemyEmitter enemyEmitter;
 
     private Music musicGame;
 
@@ -53,52 +50,79 @@ public class GameScreen extends Base2DScreen {
             star[i] = new Star(atlas);
         }
         bulletPool = new BulletPool();
-        mainShip = new MainShip(atlas, bulletPool);
+        explosionPool = new ExplosionPool(atlas);
+        mainShip = new MainShip(atlas, bulletPool, explosionPool);
+        enemyPool = new EnemyPool(bulletPool, worldBounds, explosionPool, mainShip);
+        enemyEmitter = new EnemyEmitter(atlas, enemyPool, worldBounds);
+
         musicGame =  Gdx.audio.newMusic(Gdx.files.internal("music/musicGame.mp3"));
         musicGame.setLooping(true);
         musicGame.play();
 
-        bulletPool = new BulletPool();
-        explosionPool = new ExplosionPool(atlas);
-        enemyPool = new EnemyPool(bulletPool, worldBounds);
-        mainShip = new MainShip(atlas, bulletPool);
 
-        enemyEmitterSmall = new EnemyEmitterSmall(atlas, enemyPool, worldBounds);
-        enemyEmitterMedium= new EnemyEmitterMedium(atlas, enemyPool, worldBounds);
-        enemyEmitterBig = new EnemyEmitterBig(atlas, enemyPool, worldBounds);
     }
 
     @Override
     public void render(float delta) {
         super.render(delta);
         update(delta);
+        checkCollisions();
         deleteAllDestroyed();
         draw();
     }
 
     public void update(float delta) {
-        for (int i = 0; i < star.length; i++) {
-            star[i].update(delta);
+        for (Star aStar : star) {
+            aStar.update(delta);
         }
-        mainShip.update(delta);
+        if (!mainShip.isDestroyed()) {
+            mainShip.update(delta);
+        }
         bulletPool.updateActiveSprites(delta);
         explosionPool.updateActiveSprites(delta);
         enemyPool.updateActiveSprites(delta);
-        int a = 0;
-        int b = 3;
-        int random = a + (int) (Math.random() * b);
-        switch (random){
-            case 1:{
-                enemyEmitterSmall.generate(delta);
+        enemyEmitter.generate(delta);
+    }
+
+    private void checkCollisions() {
+        List<Enemy> enemyList = enemyPool.getActiveObjects();
+        for (Enemy enemy : enemyList) {
+            if (enemy.isDestroyed()) {
+                continue;
             }
-            case 2: {
-                enemyEmitterMedium.generate(delta);
+            float minDist = enemy.getHalfWidth() + mainShip.getHalfWidth();
+            if (enemy.pos.dst2(mainShip.pos) < minDist * minDist) {
+                enemy.destroy();
+                mainShip.damage(enemy.getDamage());
+                return;
             }
-            case 3: {
-                enemyEmitterBig.generate(delta);
+        }
+        List<Bullet> bulletList = bulletPool.getActiveObjects();
+
+        for (Bullet bullet : bulletList) {
+            if (bullet.getOwner() == mainShip || bullet.isDestroyed()) {
+                continue;
+            }
+            if (mainShip.isBulletCollision(bullet)) {
+                mainShip.damage(bullet.getDamage());
+                bullet.destroy();
             }
         }
 
+        for (Enemy enemy : enemyList) {
+            if (enemy.isDestroyed()) {
+                continue;
+            }
+            for (Bullet bullet : bulletList) {
+                if (bullet.getOwner() != mainShip || bullet.isDestroyed()) {
+                    continue;
+                }
+                if (enemy.isBulletCollision(bullet)) {
+                    enemy.damage(mainShip.getDamage());
+                    bullet.destroy();
+                }
+            }
+        }
     }
 
     public void deleteAllDestroyed() {
@@ -112,10 +136,12 @@ public class GameScreen extends Base2DScreen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
         background.draw(batch);
-        for (int i = 0; i < star.length; i++) {
-            star[i].draw(batch);
+        for (Star aStar : star) {
+            aStar.draw(batch);
         }
-        mainShip.draw(batch);
+        if (!mainShip.isDestroyed()) {
+            mainShip.draw(batch);
+        }
         bulletPool.drawActiveSprites(batch);
         explosionPool.drawActiveSprites(batch);
         enemyPool.drawActiveSprites(batch);
@@ -158,15 +184,17 @@ public class GameScreen extends Base2DScreen {
 
     @Override
     public boolean touchDown(Vector2 touch, int pointer) {
-        Explosion explosion = explosionPool.obtain();
-        explosion.set(0.15f, touch);
-        mainShip.touchDown(touch, pointer);
+        if (!mainShip.isDestroyed()) {
+            mainShip.touchDown(touch, pointer);
+        }
         return super.touchDown(touch, pointer);
     }
 
     @Override
     public boolean touchUp(Vector2 touch, int pointer) {
-        mainShip.touchUp(touch, pointer);
+        if (!mainShip.isDestroyed()) {
+            mainShip.touchUp(touch, pointer);
+        }
         return super.touchUp(touch, pointer);
     }
 }
