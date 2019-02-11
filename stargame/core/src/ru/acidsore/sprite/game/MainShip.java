@@ -1,6 +1,9 @@
 package ru.acidsore.sprite.game;
 
+
 import com.badlogic.gdx.Game;
+=======
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
@@ -11,6 +14,7 @@ import com.badlogic.gdx.math.Vector2;
 import ru.acidsore.base.Sprite;
 import ru.acidsore.math.Rect;
 import ru.acidsore.pool.BulletPool;
+
 import ru.acidsore.pool.ExplosionPool;
 import ru.acidsore.screen.GameOverScreen;
 import ru.acidsore.screen.GameScreen;
@@ -21,19 +25,29 @@ public class MainShip extends Ship {
 
     private static final int INVALID_POINTER = -1;
 
+public class MainShip extends Sprite {
+
+    private Rect worldBounds;
+
+
     private final Vector2 v0 = new Vector2(0.5f, 0);
     private Vector2 v = new Vector2();
 
     private boolean isPressedLeft;
     private boolean isPressedRight;
 
+
     private float damageInterval = 0.1f;
     private float damageTimer = damageInterval;
+
+   
+
 
     private BulletPool bulletPool;
 
     private TextureRegion bulletRegion;
     private Sound shot;
+
 
     private int leftPointer = INVALID_POINTER;
     private int rightPointer = INVALID_POINTER;
@@ -55,8 +69,12 @@ public class MainShip extends Ship {
         this.hp = 1;
         this.shootSound = Gdx.audio.newSound(Gdx.files.internal("music/shot.mp3"));
     }
-
-
+    public MainShip(TextureAtlas atlas, BulletPool bulletPool) {
+        super(atlas.findRegion("main_ship"), 1, 2, 2);
+        this.bulletRegion = atlas.findRegion("bulletMainShip");
+        this.bulletPool = bulletPool;
+        setHeightProportion(0.15f);
+    }
 
     @Override
     public void resize(Rect worldBounds) {
@@ -69,6 +87,7 @@ public class MainShip extends Ship {
     public void update(float delta) {
         super.update(delta);
         pos.mulAdd(v, delta);
+
         if (getRight() > worldBounds.getRight()) {
             setRight(worldBounds.getRight());
             stop();
@@ -77,6 +96,7 @@ public class MainShip extends Ship {
             setLeft(worldBounds.getLeft());
             stop();
         }
+
     }
 
     public boolean keyDown(int keycode) {
@@ -121,6 +141,7 @@ public class MainShip extends Ship {
         }
         return false;
     }
+
 
 
     @Override
@@ -188,6 +209,20 @@ public class MainShip extends Ship {
 
     private void moveLeft() {
             v.set(v0).rotate(180);
+
+    private void moveRight() {
+      //  while (pos.x < worldBounds.getRight() - 0.07f){
+           v.set(v0);
+//            if (pos.x  == worldBounds.getRight() - 0.07f) break;
+//        }
+    }
+
+    private void moveLeft() {
+       // while (pos.x > worldBounds.getLeft() + 0.07f) {
+            v.set(v0).rotate(180);
+//            if (pos.x == worldBounds.getLeft() + 0.07f) break;
+//        }
+
     }
 
     private void stop() {
@@ -195,11 +230,45 @@ public class MainShip extends Ship {
     }
 
 
-    public void shoot() {
+
+
+
+
+    private void shoot() {
         Bullet bullet = bulletPool.obtain();
         bullet.set(this, bulletRegion, pos, new Vector2(0, 0.5f), 0.01f, worldBounds, 1);
-        shootSound.play();
+        shot = Gdx.audio.newSound(Gdx.files.internal("music/shot.mp3"));
+        shot.play();
+    }
+      @Override
+     public boolean touchDown(Vector2 touch, int pointer){
+        isPressed = true;
+        if (touch.x > (worldBounds.getHalfWidth()*0.3f))
+        {
+            moveRight();
+            return true;
+        }
+        if ( touch.x < (-worldBounds.getHalfWidth()*0.03f))
+         {
+             moveLeft();
+             return true;
+         }
+         isPressed = false;
+        return true;
     }
 
+    public boolean touchUp(Vector2 touch, int pointer){
+        if (isPressed) {
+            if (touch.x > (worldBounds.getHalfWidth() * 0.3f)) {
+                moveRight();
+                return true;
+            }
+            if (touch.x < (-worldBounds.getHalfWidth() * 0.03f)) {
+                moveLeft();
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
