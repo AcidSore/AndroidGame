@@ -12,76 +12,84 @@ import com.badlogic.gdx.audio.Sound;
 
 public class Ship extends Sprite {
 
-    protected Rect worldBounds;
 
-    protected Vector2 v = new Vector2();
+        protected Rect worldBounds;
 
-    protected BulletPool bulletPool;
-    protected ExplosionPool explosionPool;
-    protected TextureRegion bulletRegion;
+        protected Vector2 v = new Vector2();
 
-    protected float reloadInterval;
-    protected float reloadTimer;
+        protected BulletPool bulletPool;
+        protected ExplosionPool explosionPool;
+        protected TextureRegion bulletRegion;
 
-    private float damageInterval = 0.1f;
-    private float damageTimer = damageInterval;
+        protected float reloadInterval;
+        protected float reloadTimer;
 
-    protected Sound shootSound;
+        private float damageInterval = 0.1f;
+        private float damageTimer = damageInterval;
 
-    protected Vector2 bulletV;
-    protected float bulletHeight;
-    protected int damage;
+        protected Sound shootSound;
 
-    protected int hp;
+        protected Vector2 bulletV;
+        protected float bulletHeight;
+        protected int damage;
 
-    public Ship() {
-        super();
-    }
+        protected int hp;
 
-    public Ship(TextureRegion region, int rows, int cols, int frames) {
-        super(region, rows, cols, frames);
-    }
-
-    @Override
-    public void update(float delta) {
-        super.update(delta);
-        damageTimer += delta;
-        if (damageTimer >= damageInterval) {
-            frame = 0;
+        public Ship() {
+            super();
         }
-    }
 
-    @Override
-    public void resize(Rect worldBounds) {
-        super.resize(worldBounds);
-        this.worldBounds = worldBounds;
-    }
-
-    public void shoot() {
-        shootSound.play();
-        Bullet bullet = bulletPool.obtain();
-        bullet.set(this, bulletRegion, pos, bulletV, bulletHeight, worldBounds, damage);
-    }
-
-    public void boom() {
-        Explosion explosion = explosionPool.obtain();
-        explosion.set(getHeight(), pos);
-    }
-
-    public void damage(int damage) {
-        frame = 1;
-        damageTimer = 0f;
-        hp -= damage;
-        if (hp <= 0) {
-            destroy();
+        public Ship(TextureRegion region, int rows, int cols, int frames) {
+            super(region, rows, cols, frames);
         }
-    }
 
-    public void dispose() {
-        shootSound.dispose();
-    }
+        @Override
+        public void update(float delta) {
+            super.update(delta);
+            damageTimer += delta;
+            if (damageTimer >= damageInterval) {
+                frame = 0;
+            }
+        }
 
-    public int getDamage() {
-        return damage;
+        @Override
+        public void resize(Rect worldBounds) {
+            super.resize(worldBounds);
+            this.worldBounds = worldBounds;
+        }
+
+        public void shoot() {
+            shootSound.play();
+            Bullet bullet = bulletPool.obtain();
+            bullet.set(this, bulletRegion, pos, bulletV, bulletHeight, worldBounds, damage);
+        }
+
+        public void boom() {
+            Explosion explosion = explosionPool.obtain();
+            explosion.set(getHeight(), pos);
+        }
+
+        public void damage(int damage) {
+            frame = 1;
+            damageTimer = 0f;
+            hp -= damage;
+            if (hp <= 0) {
+                hp = 0;
+                destroy();
+            }
+        }
+
+        public void dispose() {
+            shootSound.dispose();
+        }
+
+        public int getDamage() {
+            return damage;
+        }
+
+        public int getHp() {
+            return hp;
+        }
+
+
     }
-}
