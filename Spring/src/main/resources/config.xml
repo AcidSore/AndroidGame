@@ -1,0 +1,16 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+  http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <context:component-scan base-package="acid_sore.Spring.hw1" />
+    <bean id="patient" class="acid_sore.Spring.hw1.Patient">
+        <property name="hospital">
+            <bean  class="acid_sore.Spring.hw1.HospitalFree" />
+        </property>
+    </bean>
+
+</beans>
