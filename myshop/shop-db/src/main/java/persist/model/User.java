@@ -1,5 +1,6 @@
 package persist.model;
 import org.springframework.data.annotation.Id;
+import persist.model.Role;
 
 import javax.persistence.*;
 import java.io.Serializable;

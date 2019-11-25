@@ -21,9 +21,9 @@
     <version>1.0.0</version>
 
     <modules>
+        <module>shop-db</module>
         <module>shop-ui</module>
         <module>shop-admin-ui</module>
-        <module>shop-db</module>
     </modules>
 
 </project>
