@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <preConditions>
+        <dbms type="h2, mysql, postgresql"/>
+        <runningAs username="root"/>
+    </preConditions>
+
+    <changeSet id="1" author="AcidSore" runOnChange="true">
+        <createTable tableName="roles">
+            <column name="id" type="int" autoIncrement="true" >
+                <constraints primaryKey="true" primaryKeyName="rolesPk" nullable="false"></constraints>
+            </column>
+            <column name="title" type="varchar(30)"></column>
+        </createTable>
+
+        <createTable tableName="users">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="usersPK"></constraints>
+            </column>
+            <column name="login" type="varchar(50)"></column>
+            <column name="password" type="varchar(50)"></column>
+            <column name="name" type="varchar(50)"></column>
+            <column name="role" type="varchar(50)">
+                <constraints foreignKeyName="rolesPK"></constraints>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <include file="changelogs/changelog-v1.xml"  relativeToChangelogFile="true" />
+
+    <changeSet id="2" author="AcidSore" runOnChange="true">
+        <tagDatabase tag="v1"/>
+    </changeSet>
+
+
+
+</databaseChangeLog>
+
