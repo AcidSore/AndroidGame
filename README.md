@@ -1,2 +1,1 @@
-# GeekUni
-Training tasks
+
